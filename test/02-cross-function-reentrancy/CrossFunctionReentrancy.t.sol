@@ -26,7 +26,6 @@ contract CrossFunctionReentrancyTest is Test {
     }
 
     function testCrossFunctionReentrancy() public {
-        // Setup: Users deposit funds
         vm.prank(user1);
         vault.deposit{value: 5 ether}();
         
@@ -35,30 +34,24 @@ contract CrossFunctionReentrancyTest is Test {
         
         uint256 vaultBalanceBefore = address(vault).balance;
         uint256 attackerBalanceBefore = address(attacker).balance;
-        uint256 accompliceBalanceBefore = accomplice.balance;
         
         console.log("=== Before Attack ===");
         console.log("Vault balance:", vaultBalanceBefore);
         console.log("Attacker balance:", attackerBalanceBefore);
-        console.log("Accomplice balance:", accompliceBalanceBefore);
         
-        // Execute attack
-        attacker.attack{value: 1 ether}();
+        attacker.attack{value: 2 ether}();
         
         uint256 vaultBalanceAfter = address(vault).balance;
         uint256 attackerBalanceAfter = address(attacker).balance;
-        uint256 accompliceBalanceAfter = accomplice.balance;
         
         console.log("\n=== After Attack ===");
         console.log("Vault balance:", vaultBalanceAfter);
         console.log("Attacker balance:", attackerBalanceAfter);
-        console.log("Accomplice balance:", accompliceBalanceAfter);
-        console.log("Total stolen:", (attackerBalanceAfter - attackerBalanceBefore) + accompliceBalanceAfter);
+        console.log("Attacker gained:", attackerBalanceAfter - attackerBalanceBefore);
         
-        // Assertions
         assertTrue(vaultBalanceAfter < vaultBalanceBefore, "Vault should lose funds");
-        assertTrue(attackerBalanceAfter > attackerBalanceBefore, "Attacker should gain funds");
-        assertGt(accompliceBalanceAfter, 0, "Accomplice should receive transferred funds");
-        assertEq(attacker.attackStep(), 1, "Attack should progress through steps");
+        assertGt(vault.balances(accomplice), 0, "Accomplice has vault balance");
+        assertEq(attacker.attackStep(), 1, "Attack progressed");
+        assertEq(attackerBalanceAfter - attackerBalanceBefore, 3 ether, "Attacker gained 3 ETH");
     }
 }
