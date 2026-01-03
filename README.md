@@ -17,3 +17,12 @@ forge build
 Run Tests
 # Test single-function reentrancy
 forge test --match-path test/01-single-function-reentrancy/SingleFunctionReentrancy.t.sol -vvv
+
+### 02. Cross-Function Reentrancy
+Reentrancy across different functions sharing state, exploiting incomplete state updates.
+
+**Pattern**: withdraw() → callback → transfer() → withdraw() again
+
+**Run Test**:
+```bash
+forge test --match-path test/02-cross-function-reentrancy/CrossFunctionReentrancy.t.sol -vvv
